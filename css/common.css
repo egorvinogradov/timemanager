@@ -1,0 +1,62 @@
+/* reset */
+
+html, body, h1, h2, h3, p, ul, ol, form, input, button, textarea {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+
+
+/* global modifiers */
+
+.m-hidden {
+    display: none;
+}
+
+
+
+/* blocks */
+
+.b-page {
+    padding: 50px;
+    font: 15px/20px monospace;
+}
+
+.b-heading_1 {
+    font-size: 24px;
+    margin-bottom: 25px;
+}
+
+.b-button {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 15px;
+    font-size: 18px;
+    color: white;
+    cursor: pointer;
+    border: 1px solid #DE5400;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 1px 2px 0 rgba(0,0,0,.2);
+    background-image: -webkit-linear-gradient(bottom, #FF5E00, #FA0);
+    text-shadow: 0 -1px 0 #B14E03;
+    border-radius: 4px;
+}
+
+.b-button:hover {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 2px 3px 0 rgba(0,0,0,.25);
+}
+
+.b-button:active {
+    box-shadow: inset 0 2px 6px rgba(222,84,0,.85);
+    padding-top: 1px;
+}
+
+.b-list {
+    margin: 0 0 15px 30px;
+    list-style: disc;
+}
