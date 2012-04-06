@@ -2,87 +2,89 @@
 
     var $,
         Query,
-        Utils = {};
+        Utils;
 
 
-    // Checks that each array element is Node
-    Utils.check = function(obj){
 
-        if ( obj && obj.length && typeof obj === 'object' ) {
-            for ( var i = 0, l = obj.length; i < l; i++ ) {
-                var isNode = obj[i] instanceof Node;
-                if ( !isNode ) return false;
+    Utils = {
+
+        // Capitalize first letter
+        capitalize: function(str){
+            return str[0].toUpperCase() + str.substr(1);
+        },
+
+        // Trim string
+        trim: function(str){
+            return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+        },
+
+        // Checks that each array element is Node
+        checkNodes: function(obj){
+
+            if ( obj && obj.length && typeof obj === 'object' ) {
+                for ( var i = 0, l = obj.length; i < l; i++ ) {
+                    var isNode = obj[i] instanceof Node;
+                    if ( !isNode ) return false;
+                }
+                return true;
             }
-            return true;
-        }
-        else {
-            return false;
-        }
-    };
-
-
-    // Capitalize first letter
-    Utils.capitalize = function(str){
-        return str[0].toUpperCase() + str.substr(1);
-    };
-
-
-    // Contains userAgent
-    Utils.ua = navigator.userAgent;
-
-
-    // Contains information about browser and vendor prefixes
-    Utils.browser = {
-        msie: {
-            test: /msie/i.test(Utils.ua),
-            prefix: 'Ms'
-        },
-        webkit: {
-            test: /webkit/i.test(Utils.ua),
-            prefix: 'Webkit'
-        },
-        gecko: {
-            test: /gecko/i.test(Utils.ua),
-            prefix: 'Moz'
-        },
-        opera: {
-            test: /opera/i.test(Utils.ua),
-            prefix: 'O'
-        },
-        current: null
-    };
-
-
-    // Defines current browser and sets it into Utils.browser.current
-    (function(b){
-
-        for ( var a in b ) {
-            if ( b[a].test ) {
-                b.current = b[a];
-                break;
+            else {
+                return false;
             }
-        }
 
-    }(Utils.browser));
+        },
 
+        // Checks that CSS3 property is supported without vendor prefix
+        // else returns that property with prefix
+        setVendorPrefix: function(prop){
 
-    // Checks that CSS3 property is supported without vendor prefix else returns that property with prefix
-    Utils.vendorPrefix = function(property){
+            var prefix,
+                browser;
 
-        var vendorProp = Utils.browser.current
-                ? Utils.browser.current.prefix + Utils.capitalize(property)
-                : property;
+            for ( var a in this.browser ) {
+                if ( this.browser[a].test ) {
 
-        return d.body[property]
-            ? d.body[property]
-            : d.body[vendorProp];
+                    prefix = this.browser[a].prefix;
+                    return d.body[prop]
+                        ? prop
+                        : prefix + this.capitalize(prop);
+                }
+            }
+
+            return prop;
+        },
+
+        // Contains information about browser and vendor prefixes
+        browser: {
+            msie: {
+                test: /msie/i.test(this.ua),
+                prefix: 'Ms'
+            },
+            webkit: {
+                test: /webkit/i.test(this.ua),
+                prefix: 'Webkit'
+            },
+            gecko: {
+                test: /gecko/i.test(this.ua),
+                prefix: 'Moz'
+            },
+            opera: {
+                test: /opera/i.test(this.ua),
+                prefix: 'O'
+            }
+        },
+        ua: navigator.userAgent
     };
+
+
+
 
 
     // Returns node collection for specified selector (class or id)
     Query = function(element){
 
-        // TODO: improve
+        // TODO: add selection by tag
+        // TODO: use xpath, querySelectorAll etc
 
         var str = function(element){
 
@@ -102,7 +104,7 @@
             },
             obj = function(element){
 
-                return Utils.check(element)
+                return Utils.checkNodes(element)
                     ? element
                     : []
             };
@@ -155,7 +157,7 @@
                 ? this
                 : collection;
 
-            _collection = Utils.check(_collection)
+            _collection = Utils.checkNodes(_collection)
                 ? _collection
                 : null;
 
@@ -193,34 +195,39 @@
 
         elements.css = function(options){
 
-            var n = {
+            var replace = {
                 
                     background: function(prop, val){
 
-                        var color = function(){
-                                return this.replace(); // TODO: parse background
+                        var re = {
+                                image: /.*((?:url\(.*\)|(?:(?:-.+)?-)?.+-gradient\(.*\))).*/i,
+                                position: /.*?((?:(?:-)?[0-9]+(?:px|%)?|left|right|top|bottom|center|inherit)).+?((?:(?:-)?[0-9]+(?:px|%)?|left|right|top|bottom|center|inherit)).*/i,
+                                repeat: /.*(repeat|no-repeat|repeat-x|repeat-y|round|space|inherit).*/i
                             },
-                            image = function(){
-                                return this.replace();
-                            },
-                            position = function(){
-                                return this.replace();
-                            },
-                            repeat = function(){
-                                return this.replace();
-                            };
+                            color,
+                            image,
+                            position,
+                            repeat;
+
+                        image = val.replace(re.image, '$1');
+                        repeat = val.replace(re.repeat, '$1');
+                        position = val.replace(re.position, '$1 $2');
+
+                        // TODO: parse background color
+                        // TODO: fix background image regexp
+                        // TODO: improve background position regexp
 
                         return {
-                            backgroundColor: color.call(val),
-                            backgroundImage: image.call(val),
-                            backgroundPosition: position.call(val),
-                            backgroundRepeat: repeat.call(val)
+                            backgroundColor: color,
+                            backgroundImage: image,
+                            backgroundPosition: position,
+                            backgroundRepeat: repeat
                         };
                     },
                     css3prop: function(prop, val){
 
                         var result = {};
-                        result[Utils.vendorPrefix(prop)] = val;
+                        result[Utils.setVendorPrefix(prop)] = val;
                         return result;
                     },
                     size: function(prop, val){
@@ -234,25 +241,25 @@
                     }
                 };
 
-            n.width =
-            n.height =
-            n.top =
-            n.left =
-            n.right =
-            n.bottom =
-            n.marginTop =
-            n.marginBottom =
-            n.marginLeft =
-            n.marginRight =
-            n.paddingTop =
-            n.paddingBottom =
-            n.paddingLeft =
-            n.paddingRight = n.size;
+            replace.width =
+            replace.height =
+            replace.top =
+            replace.left =
+            replace.right =
+            replace.bottom =
+            replace.marginTop =
+            replace.marginBottom =
+            replace.marginLeft =
+            replace.marginRight =
+            replace.paddingTop =
+            replace.paddingBottom =
+            replace.paddingLeft =
+            replace.paddingRight = replace.size;
 
-            n.mozBoxShadow = n.MozBoxShadow =
-            n.webkitBoxShadow = n.WebkitBoxShadow =
-            n.mozborderRadius = n.MozborderRadius =
-            n.webkitBorderRadius = n.WebkitBorderRadius = n.css3prop;
+            replace.mozBoxShadow        = replace.MozBoxShadow =
+            replace.webkitBoxShadow     = replace.WebkitBoxShadow =
+            replace.mozborderRadius     = replace.MozborderRadius =
+            replace.webkitBorderRadius  = replace.WebkitBorderRadius = replace.css3prop;
 
             this.each(this, function(){
 
@@ -262,15 +269,16 @@
                         value = options[a],
                         substitution;
 
-                    if ( property in n ) {
+                    if ( property in replace ) {
 
-                        substitution = n[property](property, value);
+                        substitution = replace[property](property, value);
 
-                        for ( var b in substitution ) {
-                            this.style[b] = substitution[b];
+                        for ( var newProp in substitution ) {
+                            this.style[newProp] = substitution[newProp];
                         }
                         continue;
                     }
+
                     this.style[property] = value;
                 }
             });
