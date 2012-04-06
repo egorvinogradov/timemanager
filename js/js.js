@@ -169,7 +169,8 @@
         };
 
 
-        // Returns array containing inner HTML of collection elements or sets HTML to elements of node collection if argument specified
+        // Returns array containing inner HTML of collection elements or
+        // sets HTML to elements of node collection if argument specified
         elements.html = function(str){
 
             var result = [],
@@ -192,13 +193,12 @@
 
         elements.css = function(options){
 
-            var ex = {
+            var n = {
                 
-                    background: function(){
+                    background: function(prop, val){
 
-                        var str = this,
-                            color = function(){
-                                return this.replace(); // /rgba\(.*\)|rgb\(.*\)|#[0-9A-Fa-f]]/ TODO: parse background
+                        var color = function(){
+                                return this.replace(); // TODO: parse background
                             },
                             image = function(){
                                 return this.replace();
@@ -211,47 +211,48 @@
                             };
 
                         return {
-                            backgroundColor: color.call(str),
-                            backgroundImage: image.call(str),
-                            backgroundPosition: position.call(str),
-                            backgroundRepeat: repeat.call(str)
+                            backgroundColor: color.call(val),
+                            backgroundImage: image.call(val),
+                            backgroundPosition: position.call(val),
+                            backgroundRepeat: repeat.call(val)
                         };
                     },
-                    boxShadow: function(){
+                    css3prop: function(prop, val){
+
                         var result = {};
-                        result[Utils.vendorPrefix('boxShadow')] = this;
+                        result[Utils.vendorPrefix(prop)] = val;
+                        return result;
                     },
-                    borderRadius: function(){
+                    size: function(prop, val){
+
                         var result = {};
-                        result[Utils.vendorPrefix('borderRadius')] = this;
-                    },
-                    size: function(){
-                        return +this
-                            ? this + 'px'
-                            : this;
+                        result[prop] = +val
+                            ? val + 'px'
+                            : val;
+
+                        return result;
                     }
                 };
 
-            ex.width =
-            ex.height =
-            ex.top =
-            ex.left =
-            ex.right =
-            ex.bottom =
-            ex.marginTop =
-            ex.marginBottom =
-            ex.marginLeft =
-            ex.marginRight =
-            ex.paddingTop =
-            ex.paddingBottom =
-            ex.paddingLeft =
-            ex.paddingRight = ex.size;
+            n.width =
+            n.height =
+            n.top =
+            n.left =
+            n.right =
+            n.bottom =
+            n.marginTop =
+            n.marginBottom =
+            n.marginLeft =
+            n.marginRight =
+            n.paddingTop =
+            n.paddingBottom =
+            n.paddingLeft =
+            n.paddingRight = n.size;
 
-            ex.mozBoxShadow = ex.MozBoxShadow =
-            ex.webkitBoxShadow = ex.WebkitBoxShadow = ex.boxShadow;
-
-            ex.mozborderRadius = ex.MozborderRadius =
-            ex.webkitBorderRadius = ex.WebkitBorderRadius = ex.borderRadius;
+            n.mozBoxShadow = n.MozBoxShadow =
+            n.webkitBoxShadow = n.WebkitBoxShadow =
+            n.mozborderRadius = n.MozborderRadius =
+            n.webkitBorderRadius = n.WebkitBorderRadius = n.css3prop;
 
             this.each(this, function(){
 
@@ -259,22 +260,16 @@
 
                     var property = a,
                         value = options[a],
-                        combined;
+                        substitution;
 
-                    if ( property in ex ) {
+                    if ( property in n ) {
 
-                        combined = ex[property].call(value);
+                        substitution = n[property](property, value);
 
-                        if ( typeof combined === 'string' ){
-                            value = combined;
+                        for ( var b in substitution ) {
+                            this.style[b] = substitution[b];
                         }
-
-                        if ( typeof combined === 'object' ) {
-                            for ( var b in combined ) {
-                                this.style[b] = combined[b];
-                            }
-                            continue;
-                        }
+                        continue;
                     }
                     this.style[property] = value;
                 }
@@ -285,35 +280,10 @@
 
 
 
-
-
-
         return elements;
     };
 
-
-
-
-
-    var Q = function(){
-        console.log('Q init');
-    };
-
-
-    Q.prototype.select = function(tag){
-        return d.getElementsByName(tag.toUpperCase());
-    };
-
-    Q.prototype.first = function(){
-        return this[0];
-    };
-
-
-
-
-
-
-    window.Q = Q;
     window.$ = $;
+    window.Utils = Utils; // temporary for debug
 
 }(document));
