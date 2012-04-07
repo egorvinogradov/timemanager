@@ -1,50 +1,141 @@
 (function(d){
 
     var $,
+        Utils,
         Query,
-        Utils;
+        Methods;
 
 
 
     Utils = {
 
+
         // Capitalize first letter
+
         capitalize: function(str){
             return str[0].toUpperCase() + str.substr(1);
         },
 
+
         // Trim string
+
         trim: function(str){
             return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
         },
 
-        // Checks that each array element is Node
-        checkNodes: function(obj){
 
-            if ( obj && obj.length && typeof obj === 'object' ) {
-                for ( var i = 0, l = obj.length; i < l; i++ ) {
-                    var isNode = obj[i] instanceof Node;
-                    if ( !isNode ) return false;
+        // Returns array of Nodes or false
+        // if any elements are not nodes
+
+        getNodeArray: function(nodes){
+
+            var checkNodes,
+                result;
+
+            checkNodes = function(nodes, makeArray){
+
+                var result = [],
+                    isNodes = true;
+
+                for ( var i = 0, l = nodes.length; i < l; i++ ) {
+                    var element = nodes[i],
+                        isNode = element instanceof Node;
+                    if ( !isNode ) {
+                        isNodes = false;
+                        break;
+                    }
+                    makeArray && result.push(element);
                 }
-                return true;
-            }
-            else {
-                return false;
+
+                result = makeArray
+                    ? result
+                    : nodes;
+
+                return isNodes
+                    ? result
+                    : false;
+            };
+
+            if ( nodes && nodes.length && nodes instanceof Object ) {
+
+                result =
+                    nodes instanceof Array && checkNodes(nodes) ||
+                    nodes instanceof Node && [nodes] ||
+                    checkNodes(nodes, true);
+
+                return result
+                    ? result
+                    : [];
             }
 
+            return [];
         },
+
+
+        // Goes over array or object and runs function for each element
+        // with defined context or context containing current element
+
+        each: function(col, fn, cntxt){
+
+            var notChain,
+                collection,
+                func,
+                context,
+                isIterable,
+                iterateArray,
+                iterateObject;
+
+            notChain = arguments.length > 1 && arguments[1] instanceof Function;
+
+            collection = notChain
+                ? arguments[0]
+                : this;
+
+            func = notChain
+                ? arguments[1]
+                : arguments[0];
+
+            context = notChain
+                ? arguments[2]
+                : arguments[1];
+
+            isIterable = collection.length || collection instanceof Object;
+
+            iterateArray = function(){
+                for ( var i = 0, l = collection.length; i < l; i++ ) {
+                    func.call(context || collection[i], i, collection[i]);
+                }
+            };
+
+            iterateObject = function(){
+                for ( var a in collection ) {
+                    func.call(context || collection[a], a, collection[a]);
+
+                }
+            };
+
+            if ( func && collection && isIterable ) {
+                collection.length
+                    ? iterateArray()
+                    : iterateObject();
+            }
+
+            return collection;
+        },
+
 
         // Checks that CSS3 property is supported without vendor prefix
         // else returns that property with prefix
+
         setVendorPrefix: function(prop){
 
             var prefix,
                 browser;
 
-            for ( var a in this.browser ) {
-                if ( this.browser[a].test ) {
+            for ( var name in this.browser ) {
+                if ( Utils.browser[name].test ) {
 
-                    prefix = this.browser[a].prefix;
+                    prefix = Utils.browser[name].prefix;
                     return d.body[prop]
                         ? prop
                         : prefix + this.capitalize(prop);
@@ -54,7 +145,9 @@
             return prop;
         },
 
-        // Contains information about browser and vendor prefixes
+
+        // Contains information about browsers and vendor prefixes
+
         browser: {
             msie: {
                 test: /msie/i.test(this.ua),
@@ -78,45 +171,145 @@
 
 
 
+    // Returns node collection for specified selector
 
+    Query = function(s){
 
-    // Returns node collection for specified selector (class or id)
-    Query = function(element){
+        var getBySelector,
+            getFromNodes,
+            isSelector = typeof s === 'string' || s instanceof String;
 
-        // TODO: add selection by tag
-        // TODO: use xpath, querySelectorAll etc
+        getBySelector = function(selector){
 
-        var str = function(element){
+            var getByTagName,
+                getByClassName,
+                getById,
+                tagNameRe = /^\w+$/i,
+                classNameRe = /^\.[a-z0-9-_.]+$/i,
+                idRe = /^#[a-z0-9-_]+$/i,
+                result;
 
-                var cl = function(cl){
-                        return d.getElementsByClassName(cl.substr(1));
-                    },
-                    id = function(id){
-                        return [d.getElementById(id.substr(1))];
-                    };
-
-                return /^\./.test(element)
-                    ? cl(element)
-                    : /^#/.test(element)
-                        ? id(element)
-                        : [];
-
-            },
-            obj = function(element){
-
-                return Utils.checkNodes(element)
-                    ? element
-                    : []
+            getByTagName = function(selector){
+                var result = [];
+                Utils.each(d.getElementsByTagName(selector), function(){
+                    result.push(this);
+                });
+                return result;
             };
 
-        return typeof element === 'string' || element instanceof String
-            ? str(element)
-            : obj(element);
+            getByClassName = function(selector){
+                var result = [],
+                    nodes = d.getElementsByClassName && d.getElementsByClassName(selector.substr(1));
+
+                Utils.each(nodes, function(){
+                    result.push(this);
+                });
+                return result;
+            };
+
+            getById = function(selector){
+                var result = d.getElementById(selector.substr(1));
+                return result
+                    ? [result]
+                    : [];
+            };
+
+            console.log('Node type:',
+                tagNameRe.test(selector) && 'TAG  ' + selector ||
+                classNameRe.test(selector) && 'CLASS  ' + selector ||
+                idRe.test(selector) && 'ID  ' + selector
+            );
+
+            result =
+                tagNameRe.test(selector)    && getByTagName(selector)   ||
+                classNameRe.test(selector)  && getByClassName(selector) ||
+                idRe.test(selector)         && getById(selector)        ||
+                [];
+
+            return result;
+        };
+
+
+        getFromNodes = function(nodes){
+
+            var result = Utils.getNodeArray(nodes);
+            return result
+                ? result
+                : [];
+        };
+
+        return isSelector
+            ? getBySelector(s)
+            : getFromNodes(s);
+    };
+
+
+
+
+    Methods = {
+
+        // Returns collection containing first element of node collection
+        first: function(){
+            var result = this[0];
+            return result
+                ? [result]
+                : [];
+        },
+
+        // Returns collection containing last element of node collection
+        last: function(){
+            var result = this[ this.length - 1 ];
+            return result
+                ? [result]
+                : [];
+        },
+
+        // Returns collection containing element with specified index of node collection
+        eq: function(i){
+            var result = this[i];
+            return result
+                ? [result]
+                : [];
+        },
+
+        each: Utils.each
 
     };
 
 
-    $ = function(selector){
+
+
+
+
+
+
+
+    (function(p){
+        for ( var method in Methods ) {
+            p[method] = Methods[method];
+        }
+    }(Array.prototype));
+
+
+
+
+
+
+
+    if ( !window.console || !window.console.log ) {
+        window.console = {
+            log: function(){
+                alert(arguments.join(' '));
+            }
+        };
+    }
+
+
+
+
+    
+
+    var $2 = function(selector){
 
         var elements = new Query(selector);
 
@@ -142,33 +335,8 @@
         };
 
 
-        // Goes over node collection and runs function for each element with context containing current node
-        elements.each = function(collection, func){
 
-            var isChain = arguments.length < 2,
-                _collection,
-                _func;
 
-            _func = isChain
-                ? arguments[0]
-                : arguments[1];
-
-            _collection = isChain
-                ? this
-                : collection;
-
-            _collection = Utils.checkNodes(_collection)
-                ? _collection
-                : null;
-
-            if ( !_collection || !_func ) return this;
-
-            for ( var i = 0, l = _collection.length; i < l; i++ ) {
-                _func.call(_collection[i], i, _collection[i]);
-            }
-
-            return this;
-        };
 
 
         // Returns array containing inner HTML of collection elements or
@@ -195,19 +363,44 @@
 
         elements.css = function(options){
 
+
+            //(/.*?((?:(?:-)?[0-9]+(?:px|%)?|left|right|top|bottom|center|inherit)).*?/ig, '$1 ')
+
             var replace = {
                 
                     background: function(prop, val){
 
                         var re = {
                                 image: /.*((?:url\(.*\)|(?:(?:-.+)?-)?.+-gradient\(.*\))).*/i,
-                                position: /.*?((?:(?:-)?[0-9]+(?:px|%)?|left|right|top|bottom|center|inherit)).+?((?:(?:-)?[0-9]+(?:px|%)?|left|right|top|bottom|center|inherit)).*/i,
-                                repeat: /.*(repeat|no-repeat|repeat-x|repeat-y|round|space|inherit).*/i
+                                position: /.*?((?:(?:-)?[0-9]+(?:px|%)?|left|right|top|bottom|center))\s+?((?:(?:-)?[0-9]+(?:px|%)?|left|right|top|bottom|center)).*/i,
+                                repeat: /.*(no-repeat|repeat-x|repeat-y|[^-]repeat|round|space).*/i,
+                                important: /!important/i
                             },
                             color,
                             image,
                             position,
-                            repeat;
+                            repeat,
+                            none = {
+                                backgroundColor: 'transparent',
+                                backgroundImage: 'none'
+                            };
+
+                        if ( Utils.trim(val) === 'none' ) return none;
+
+
+
+//function zzz(str, p1, p2, offset, s) {
+//
+//    console.log('str:', str, '\np1:', p1, '\np2:', p2, '\noffset:',offset, '\ns:',s);
+//    //return p1 + ", " + p2;
+//}
+//
+//var newString = "my XXzz".replace(/(X+)(z+)/, zzz);
+
+
+
+
+
 
                         image = val.replace(re.image, '$1');
                         repeat = val.replace(re.repeat, '$1');
@@ -291,7 +484,7 @@
         return elements;
     };
 
-    window.$ = $;
+    window.$ = Query;
     window.Utils = Utils; // temporary for debug
 
 }(document));
