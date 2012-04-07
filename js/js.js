@@ -99,7 +99,7 @@
                 ? arguments[2]
                 : arguments[1];
 
-            isIterable = collection.length || collection instanceof Object;
+            isIterable = collection.length !== undefined || collection instanceof Object;
 
             iterateArray = function(){
                 for ( var i = 0, l = collection.length; i < l; i++ ) {
@@ -115,7 +115,7 @@
             };
 
             if ( func && collection && isIterable ) {
-                collection.length
+                collection.length !== undefined
                     ? iterateArray()
                     : iterateObject();
             }
@@ -173,7 +173,7 @@
 
     // Returns node collection for specified selector
 
-    Query = function(s){
+    Query = function(s, parentNode){
 
         var getBySelector,
             getFromNodes,
@@ -189,9 +189,11 @@
                 idRe = /^#[a-z0-9-_]+$/i,
                 result;
 
+            parentNode = parentNode || d;
+
             getByTagName = function(selector){
                 var result = [];
-                Utils.each(d.getElementsByTagName(selector), function(){
+                Utils.each(parentNode.getElementsByTagName(selector), function(){
                     result.push(this);
                 });
                 return result;
@@ -199,7 +201,8 @@
 
             getByClassName = function(selector){
                 var result = [],
-                    nodes = d.getElementsByClassName && d.getElementsByClassName(selector.substr(1));
+                    nodes = parentNode.getElementsByClassName
+                        && parentNode.getElementsByClassName(selector.substr(1));
 
                 Utils.each(nodes, function(){
                     result.push(this);
@@ -208,17 +211,20 @@
             };
 
             getById = function(selector){
-                var result = d.getElementById(selector.substr(1));
+                var result = parentNode.getElementById(selector.substr(1));
                 return result
                     ? [result]
                     : [];
             };
 
+
+            // TODO: remove console log
             console.log('Node type:',
                 tagNameRe.test(selector) && 'TAG  ' + selector ||
                 classNameRe.test(selector) && 'CLASS  ' + selector ||
                 idRe.test(selector) && 'ID  ' + selector
             );
+
 
             result =
                 tagNameRe.test(selector)    && getByTagName(selector)   ||
@@ -249,27 +255,130 @@
     Methods = {
 
         // Returns collection containing first element of node collection
+
         first: function(){
             var result = this[0];
-            return result
-                ? [result]
-                : [];
+            return result ? [result] : [];
         },
+
 
         // Returns collection containing last element of node collection
+
         last: function(){
             var result = this[ this.length - 1 ];
-            return result
-                ? [result]
-                : [];
+            return result ? [result] : [];
         },
 
+
         // Returns collection containing element with specified index of node collection
+
         eq: function(i){
             var result = this[i];
-            return result
-                ? [result]
-                : [];
+            return result ? [result] : [];
+        },
+
+
+        // Finds children of node (nodes)
+
+        find: function(selector){
+
+            var result = [];
+
+            this.each(function(){
+                result.push( Query(selector, this) );
+            }, this);
+
+            return result;
+        },
+
+
+        // Returns array containing inner HTML of collection elements or
+        // sets HTML to elements of node collection if argument specified
+
+        html: function(htmlString){
+
+            var result = [],
+                getHTML = function(){
+                    result.push(this.innerHTML);
+                },
+                setHTML = function(){
+                    this.innerHTML = htmlString;
+                };
+
+            this.each(htmlString ? setHTML : getHTML);
+
+            return htmlString
+                ? this
+                : result.length === 1
+                    ? result[0]
+                    : result;
+        },
+
+
+        // Sets style defined as object
+        // into style attribute
+
+        css: function(options){
+
+            var replace,
+                setAlias,
+                alias = {
+                    size: 'width|height|top|left|right|bottom|marginTop|marginBottom|marginLeft|marginRight|paddingTop|paddingBottom|paddingLeft|paddingRight',
+                    css3prop: 'mozBoxShadow|MozBoxShadow|webkitBoxShadow|WebkitBoxShadow|mozborderRadius|MozborderRadius|webkitBorderRadius|WebkitBorderRadius'
+                };
+
+            replace = {
+                css3prop: function(prop, val){
+
+                    var result = {};
+                    result[Utils.setVendorPrefix(prop)] = val;
+                    return result;
+                },
+                size: function(prop, val){
+
+                    var result = {};
+                    result[prop] = +val
+                        ? val + 'px'
+                        : val;
+
+                    return result;
+                }
+            };
+
+            setAlias = function(names, setTo){
+                for ( var i = 0, l = names.length; i < l; i++ ) {
+                    replace[names[i]] = setTo;
+                }
+            };
+
+
+            setAlias(alias.size.split('|'), replace.size);
+            setAlias(alias.css3prop.split('|'), replace.css3prop);
+
+
+            this.each(this, function(){
+
+                for ( var a in options ) {
+
+                    var property = a,
+                        value = options[a],
+                        substitution;
+
+                    if ( property in replace ) {
+
+                        substitution = replace[property](property, value);
+
+                        for ( var newProp in substitution ) {
+                            this.style[newProp] = substitution[newProp];
+                        }
+                        continue;
+                    }
+
+                    this.style[property] = value;
+                }
+            });
+
+            return this;
         },
 
         each: Utils.each
@@ -484,7 +593,11 @@
         return elements;
     };
 
-    window.$ = Query;
+
+
+    window.$ = function(selector, parentNode){ return Query(selector, parentNode) };
+
+    window.Query = Query; // temporary for debug
     window.Utils = Utils; // temporary for debug
 
 }(document));
