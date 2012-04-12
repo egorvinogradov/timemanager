@@ -12,6 +12,14 @@
 
     var _ua = navigator.userAgent;
 
+    if ( !window.console || !window.console.log ) {
+        window.console = {
+            log: function(){
+                alert(Array.prototype.join.call(arguments, ' '));
+            }
+        };
+    }
+
 
 
 
@@ -54,7 +62,7 @@
         // Trim string
 
         trim: function(str){
-            return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+            return str.replace(/^\s+/, '').replace(/\s+$/, '');
         },
 
 
@@ -192,6 +200,8 @@
 
     Query = function(s, parentNode){
 
+        // TODO: make correct work with window object
+
         var getBySelector,
             getFromNodes,
             isSelector = typeof s === 'string' || s instanceof String;
@@ -247,15 +257,6 @@
                         ? [result]
                         : [];
                 };
-
-
-                // TODO: remove console log
-//                console.log('Node type:',
-//                    tagNameRe.test(selector)    && 'TAG  ' + selector   ||
-//                    classNameRe.test(selector)  && 'CLASS  ' + selector ||
-//                    idRe.test(selector)         && 'ID  ' + selector
-//                );
-
 
                 result =
                     tagNameRe.test(selector)    && getByTagName(selector)   ||
@@ -395,6 +396,19 @@
         each: Utils.each,
 
 
+        bind: function(eventType, handler, context){
+
+            // TODO: make event addition
+
+
+            context = context || this;
+
+            
+
+
+        },
+
+
         // Animation
 
         animate: function(options, time, callback){
@@ -412,6 +426,12 @@
             });
 
             return this;
+        },
+
+        draggable: function(){
+
+            // TODO: make draggable method
+
         }
 
     };
@@ -423,21 +443,11 @@
 
 
 
-    (function(p){
+    (function(Array){
         for ( var method in Methods ) {
-            p[method] = Methods[method];
+            Array[method] = Methods[method];
         }
     }(Array.prototype));
-
-
-
-    if ( !window.console || !window.console.log ) {
-        window.console = {
-            log: function(){
-                alert(Array.prototype.join.call(arguments, ' '));
-            }
-        };
-    }
 
 
 
@@ -445,5 +455,6 @@
 
     window.Query = Query; // temporary for debug
     window.Utils = Utils; // temporary for debug
+    window.Settings = Settings; // temporary for debug
 
 }(document));
