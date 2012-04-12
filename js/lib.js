@@ -44,8 +44,20 @@
                 test: /opera/i.test(_ua),
                 prefix: 'O'
             }
-        }
+        },
 
+
+        // Key codes
+
+        keys: {
+            enter:  13,
+            escape: 27,
+            space:  32,
+            left:   37,
+            up:     38,
+            right:  39,
+            down:   40
+        }
     };
 
 
@@ -191,6 +203,7 @@
 
     // Returns node collection for specified selector
     // Examples:
+    //    Query('*')
     //    Query('body')
     //    Query(document.body)
     //    Query('.class')
@@ -219,7 +232,7 @@
                 var getByTagName,
                     getByClassName,
                     getById,
-                    tagNameRe = /^\w+$/i,
+                    tagNameRe = /(?:^[a-z]+$)|(?:^\*$)/i,
                     classNameRe = /^\.[a-z0-9-_.]+$/i,
                     idRe = /^#[a-z0-9-_]+$/i,
                     result;
@@ -239,16 +252,41 @@
                 };
 
                 getByClassName = function(selector){
-                    var result = [],
+
+                    var nativeGetByClassName,
+                        alternateGetByClassName;
+
+                    nativeGetByClassName = function(){
+
+                        var elements = parentNode.getElementsByClassName(selector.substr(1)),
+                            result = [];
+
+                        for ( var i = 0, l = elements.length; i < l; i++ ) {
+                            result.push(elements[i]);
+                        }
+                        return result;
+                    };
+
+                    alternateGetByClassName = function(){
+
+                        var elements = parentNode.getElementsByTagName('*'),
+                            className = selector.substr(1),
+                            result = [];
+
+                        for ( var i = 0, l = elements.length; i < l; i ++ ) {
+                            elements[i].className === className && result.push(elements[i]);
+                        }
+                        return result;
+                    };
+
                         nodes = parentNode.getElementsByClassName
                             && parentNode.getElementsByClassName(selector.substr(1));
 
-                    // TODO: make it crossbrowser
 
-                    Utils.each(nodes, function(){
-                        result.push(this);
-                    });
-                    return result;
+                    return parentNode.getElementsByClassName
+                        ? nativeGetByClassName()
+                        : alternateGetByClassName();
+
                 };
 
                 getById = function(selector){
@@ -393,9 +431,6 @@
             return this;
         },
 
-        each: Utils.each,
-
-
         bind: function(eventType, handler, context){
 
             // TODO: make it crossbrowser
@@ -487,7 +522,11 @@
 
             return this;
 
-        }
+        },
+        
+        each: Utils.each,
+        browser: Settings.browser,
+        keys: Settings.keys
 
     };
 
