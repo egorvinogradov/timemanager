@@ -22,32 +22,23 @@
 
 
 
+    // Main part of framework
 
     Settings = {
 
-        // Contains information about browsers and vendor prefixes
-
         browser: {
-            msie: {
-                test: /msie/i.test(_ua),
-                prefix: 'Ms'
-            },
-            webkit: {
-                test: /webkit/i.test(_ua),
-                prefix: 'Webkit'
-            },
-            gecko: {
-                test: /gecko/i.test(_ua),
-                prefix: 'Moz'
-            },
-            opera: {
-                test: /opera/i.test(_ua),
-                prefix: 'O'
-            }
+            msie:   /msie/i.test(_ua),
+            webkit: /webkit/i.test(_ua),
+            gecko:  /gecko/i.test(_ua),
+            opera:  /opera/i.test(_ua)
         },
 
-
-        // Key codes
+        browserPrefixes: {
+            msie:   'Ms',
+            webkit: 'Webkit',
+            gecko:  'Moz',
+            opera:  'O'
+        },
 
         keys: {
             enter:  13,
@@ -186,9 +177,9 @@
             var prefix;
 
             for ( var name in Settings.browser ) {
-                if ( Settings.browser[name].test ) {
+                if ( Settings.browser[name] ) {
 
-                    prefix = Settings.browser[name].prefix;
+                    prefix = Settings.browserPrefixes[name];
                     return d.body[prop]
                         ? prop
                         : prefix + this.capitalize(prop);
@@ -500,9 +491,22 @@
         animate: function(options, time, callback){
 
             var animate = function(element){
-                options[Utils.setVendorPrefix('transition')] = 'all ' + time + 'ms ease';
+
+                var properties = [];
+
+                for ( var a in options ) {
+                    properties.push(a);
+                }
+
+                options[Utils.setVendorPrefix('transition')] = properties + ' ' + ( +time ? time : 100 ) + 'ms';
                 options.position = 'relative';
                 element.css(options);
+
+
+                
+
+
+
 
 
                 // TODO: make it crossbrowser
@@ -524,11 +528,11 @@
 
         },
         
-        each: Utils.each,
-        browser: Settings.browser,
-        keys: Settings.keys
+        each: Utils.each
 
     };
+
+
 
 
 
@@ -544,8 +548,12 @@
     }(Array.prototype));
 
 
-
     window.$ = function(selector, parentNode){ return Query(selector, parentNode) };
+    window.$.browser = Settings.browser;
+    window.$.keys = Settings.keys;
+    window.$.trim = Utils.trim;
+    window.$.capitalize = Utils.capitalize;
+    
 
     window.Query = Query; // temporary for debug
     window.Utils = Utils; // temporary for debug
