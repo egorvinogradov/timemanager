@@ -399,6 +399,10 @@
 
         css: function(options){
 
+
+            // TODO: return calculated style when options are not specified
+
+
             var measurableProperties = 'width|height|top|left|right|bottom|marginTop|marginBottom|marginLeft|marginRight|paddingTop|paddingBottom|paddingLeft|paddingRight',
                 setUnits = function(value){
                 return +value
@@ -411,8 +415,8 @@
                 for ( var property in options ) {
 
                     var value = measurableProperties.indexOf(property) >= 0
-                            ? setUnits(options[property])
-                            : options[property];
+                        ? setUnits(options[property])
+                        : options[property];
 
                     this.style[property] = value;
 
@@ -506,9 +510,7 @@
                 
 
 
-
-
-
+                // TODO: RTFM http://www.kigorw.com/articles/banny
                 // TODO: make it crossbrowser
                 // TODO: learn how to make callback
             };
@@ -525,7 +527,6 @@
             // TODO: make draggable method
 
             return this;
-
         },
         
         each: Utils.each
