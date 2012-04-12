@@ -398,14 +398,15 @@
 
         bind: function(eventType, handler, context){
 
+            // TODO: make it crossbrowser
+
             var func;
 
             eventType = 'on' + eventType;
 
             func = function(event){
-                return handler.call([event.target] || context, event);
+                return handler.call(context || [event.target], event);
             };
-
 
             this.each(function(){
                 this[eventType] = func;
@@ -415,47 +416,47 @@
         },
 
         click: function(h, c){
-            this.bind('click', h, c);
+            return this.bind('click', h, c);
         },
         
         mousedown: function(h, c){
-            this.bind('mousedown', h, c);
+            return this.bind('mousedown', h, c);
         },
         
         mouseup: function(h, c){
-            this.bind('mouseup', h, c);
+            return this.bind('mouseup', h, c);
         },
 
         mouseover: function(h, c){
-            this.bind('mouseover', h, c);
+            return this.bind('mouseover', h, c);
         },
         
         mouseout: function(h, c){
-            this.bind('mouseout', h, c);
+            return this.bind('mouseout', h, c);
         },
         
         keydown: function(h, c){
-            this.bind('keydown', h, c);
+            return this.bind('keydown', h, c);
         },
         
         keyup: function(h, c){
-            this.bind('keyup', h, c);
+            return this.bind('keyup', h, c);
         },
         
         keypress: function(h, c){
-            this.bind('keypress', h, c);
+            return this.bind('keypress', h, c);
         },
         
         change: function(h, c){
-            this.bind('change', h, c);
+            return this.bind('change', h, c);
         },
 
         focus: function(h, c){
-            this.bind('focus', h, c);
+            return this.bind('focus', h, c);
         },
         
         blur: function(h, c){
-            this.bind('blur', h, c);
+            return this.bind('blur', h, c);
         },
         
 
@@ -468,7 +469,9 @@
                 options.position = 'relative';
                 element.css(options);
 
-                // remove transition when animation will be finished
+
+                // TODO: make it crossbrowser
+                // TODO: learn how to make callback
             };
 
             this.each(function(){
