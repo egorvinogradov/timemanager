@@ -328,6 +328,13 @@
         },
 
 
+        // Adds nodes to initial node array
+
+        add: function(selector, parentNode){
+            return this.concat( Query(selector, parentNode) );
+        },
+
+
         // Returns array containing inner HTML of collection elements or
         // sets HTML to elements of node collection if argument specified
 
@@ -356,61 +363,23 @@
 
         css: function(options){
 
-            var replace,
-                setAlias,
-                alias = {
-                    size: 'width|height|top|left|right|bottom|marginTop|marginBottom|marginLeft|marginRight|paddingTop|paddingBottom|paddingLeft|paddingRight'.split('|'),
-                    css3prop: 'mozBoxShadow|MozBoxShadow|webkitBoxShadow|WebkitBoxShadow|mozborderRadius|MozborderRadius|webkitBorderRadius|WebkitBorderRadius'.split('|')
-                };
-
-            replace = {
-                css3prop: function(prop, val){
-
-                    var result = {};
-                    result[Utils.setVendorPrefix(prop)] = val;
-                    return result;
-                },
-                size: function(prop, val){
-
-                    var result = {};
-                    result[prop] = +val
-                        ? val + 'px'
-                        : val;
-
-                    return result;
-                }
+            var measurableProperties = 'width|height|top|left|right|bottom|marginTop|marginBottom|marginLeft|marginRight|paddingTop|paddingBottom|paddingLeft|paddingRight',
+                setUnits = function(value){
+                return +value
+                    ? value + 'px'
+                    : value;
             };
-
-            setAlias = function(names, setTo){
-                for ( var i = 0, l = names.length; i < l; i++ ) {
-                    replace[names[i]] = setTo;
-                }
-            };
-
-
-            setAlias(alias.size, replace.size);
-            setAlias(alias.css3prop, replace.css3prop);
-
 
             this.each(this, function(){
 
-                for ( var a in options ) {
+                for ( var property in options ) {
 
-                    var property = a,
-                        value = options[a],
-                        substitution;
-
-                    if ( property in replace ) {
-
-                        substitution = replace[property](property, value);
-
-                        for ( var newProp in substitution ) {
-                            this.style[newProp] = substitution[newProp];
-                        }
-                        continue;
-                    }
+                    var value = measurableProperties.indexOf(property) >= 0
+                            ? setUnits(options[property])
+                            : options[property];
 
                     this.style[property] = value;
+
                 }
             });
 
