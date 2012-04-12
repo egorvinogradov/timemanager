@@ -7,8 +7,37 @@
         Methods;
 
 
+
+    // Need to run first
+
+    var _ua = navigator.userAgent;
+
+
+
+
     Settings = {
-        ua: navigator.userAgent
+
+        // Contains information about browsers and vendor prefixes
+
+        browser: {
+            msie: {
+                test: /msie/i.test(_ua),
+                prefix: 'Ms'
+            },
+            webkit: {
+                test: /webkit/i.test(_ua),
+                prefix: 'Webkit'
+            },
+            gecko: {
+                test: /gecko/i.test(_ua),
+                prefix: 'Moz'
+            },
+            opera: {
+                test: /opera/i.test(_ua),
+                prefix: 'O'
+            }
+        }
+
     };
 
 
@@ -134,13 +163,12 @@
 
         setVendorPrefix: function(prop){
 
-            var prefix,
-                browser;
+            var prefix;
 
-            for ( var name in this.browser ) {
-                if ( Utils.browser[name].test ) {
+            for ( var name in Settings.browser ) {
+                if ( Settings.browser[name].test ) {
 
-                    prefix = Utils.browser[name].prefix;
+                    prefix = Settings.browser[name].prefix;
                     return d.body[prop]
                         ? prop
                         : prefix + this.capitalize(prop);
@@ -148,27 +176,6 @@
             }
 
             return prop;
-        },
-
-        // Contains information about browsers and vendor prefixes
-
-        browser: {
-            msie: {
-                test: /msie/i.test(Settings.ua),
-                prefix: 'ms'
-            },
-            webkit: {
-                test: /webkit/i.test(Settings.ua),
-                prefix: 'webkit'
-            },
-            gecko: {
-                test: /gecko/i.test(Settings.ua),
-                prefix: 'moz'
-            },
-            opera: {
-                test: /opera/i.test(Settings.ua),
-                prefix: 'o'
-            }
         }
     };
 
@@ -177,6 +184,7 @@
     // Returns node collection for specified selector
     // Examples:
     //    Query('body')
+    //    Query(document.body)
     //    Query('.class')
     //    Query('#id')
     //    Query('.class, body, #id')
@@ -187,8 +195,6 @@
         var getBySelector,
             getFromNodes,
             isSelector = typeof s === 'string' || s instanceof String;
-
-
 
 
         getBySelector = function(s){
@@ -214,8 +220,6 @@
                         ? parentNode[0]
                         : d;
 
-                console.log('parent node', parentNode);
-
                 getByTagName = function(selector){
                     var result = [];
                     Utils.each(parentNode.getElementsByTagName(selector), function(){
@@ -228,6 +232,8 @@
                     var result = [],
                         nodes = parentNode.getElementsByClassName
                             && parentNode.getElementsByClassName(selector.substr(1));
+
+                    // TODO: make it crossbrowser
 
                     Utils.each(nodes, function(){
                         result.push(this);
@@ -244,11 +250,11 @@
 
 
                 // TODO: remove console log
-                console.log('Node type:',
-                    tagNameRe.test(selector) && 'TAG  ' + selector ||
-                    classNameRe.test(selector) && 'CLASS  ' + selector ||
-                    idRe.test(selector) && 'ID  ' + selector
-                );
+//                console.log('Node type:',
+//                    tagNameRe.test(selector)    && 'TAG  ' + selector   ||
+//                    classNameRe.test(selector)  && 'CLASS  ' + selector ||
+//                    idRe.test(selector)         && 'ID  ' + selector
+//                );
 
 
                 result =
@@ -335,8 +341,8 @@
         },
 
 
-        // Returns array containing inner HTML of collection elements or
-        // sets HTML to elements of node collection if argument specified
+        // Returns array containing inner HTML of collection of elements or
+        // sets HTML to elements if argument 'htmlString' specified
 
         html: function(htmlString){
 
@@ -386,7 +392,27 @@
             return this;
         },
 
-        each: Utils.each
+        each: Utils.each,
+
+
+        // Animation
+
+        animate: function(options, time, callback){
+
+            var animate = function(element){
+                options[Utils.setVendorPrefix('transition')] = 'all ' + time + 'ms ease';
+                options.position = 'relative';
+                element.css(options);
+
+                // remove transition when animation will be finished
+            };
+
+            this.each(function(){
+                animate([this]);
+            });
+
+            return this;
+        }
 
     };
 
