@@ -377,7 +377,7 @@
                     : value;
             };
 
-            this.each(this, function(){
+            this.each(function(){
 
                 for ( var property in options ) {
 
@@ -398,16 +398,66 @@
 
         bind: function(eventType, handler, context){
 
-            // TODO: make event addition
+            var func;
+
+            eventType = 'on' + eventType;
+
+            func = function(event){
+                return handler.call([event.target] || context, event);
+            };
 
 
-            context = context || this;
+            this.each(function(){
+                this[eventType] = func;
+            });
 
-            
-
-
+            return this;
         },
 
+        click: function(h, c){
+            this.bind('click', h, c);
+        },
+        
+        mousedown: function(h, c){
+            this.bind('mousedown', h, c);
+        },
+        
+        mouseup: function(h, c){
+            this.bind('mouseup', h, c);
+        },
+
+        mouseover: function(h, c){
+            this.bind('mouseover', h, c);
+        },
+        
+        mouseout: function(h, c){
+            this.bind('mouseout', h, c);
+        },
+        
+        keydown: function(h, c){
+            this.bind('keydown', h, c);
+        },
+        
+        keyup: function(h, c){
+            this.bind('keyup', h, c);
+        },
+        
+        keypress: function(h, c){
+            this.bind('keypress', h, c);
+        },
+        
+        change: function(h, c){
+            this.bind('change', h, c);
+        },
+
+        focus: function(h, c){
+            this.bind('focus', h, c);
+        },
+        
+        blur: function(h, c){
+            this.bind('blur', h, c);
+        },
+        
 
         // Animation
 
@@ -431,6 +481,8 @@
         draggable: function(){
 
             // TODO: make draggable method
+
+            return this;
 
         }
 
